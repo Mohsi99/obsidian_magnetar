@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/contants/app_colors.dart';
 import '../../../../core/model/transactions_model.dart';
+import '../../../../providers/currency_provider.dart';
 
 class TransactionListItem extends StatelessWidget {
   final TransactionModel transaction;
@@ -14,8 +16,9 @@ class TransactionListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currency = context.watch<CurrencyProvider>().currency;
     final isIncome = transaction.type == TransactionType.income;
-    final amountColor = isIncome ? const Color(0xFF10B981) : const Color(0xFFEF4444); // More vibrant colors
+    final amountColor = isIncome ? const Color(0xFF10B981) : const Color(0xFFEF4444);
 
     return Container(
       decoration: BoxDecoration(
@@ -23,7 +26,7 @@ class TransactionListItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -82,22 +85,15 @@ class TransactionListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${isIncome ? '+' : '-'}\$${transaction.amount.toStringAsFixed(2)}',
+                  '${isIncome ? '+' : '-'}${currency.symbol}${transaction.amount.toStringAsFixed(2)}',
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.w700,
                     color: amountColor,
                     fontSize: 16,
                   ),
                 ),
-                if (transaction.isRecurring)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Icon(
-                      Icons.repeat,
-                      size: 14,
-                      color: AppColors.gray400,
-                    ),
-                  ),
+
+
               ],
             ),
           ],

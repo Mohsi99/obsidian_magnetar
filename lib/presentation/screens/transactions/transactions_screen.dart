@@ -84,14 +84,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return Scaffold(
       backgroundColor: AppColors.gray50,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text(
+
           AppStrings.transactions,
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: AppColors.gray50,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: AppColors.gray900),

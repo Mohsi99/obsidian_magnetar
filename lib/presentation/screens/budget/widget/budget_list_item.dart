@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:obsidian_magnetar/core/contants/app_colors.dart';
 import 'package:obsidian_magnetar/core/model/budget_model.dart';
+import 'package:provider/provider.dart';
+
+import '../../../../providers/currency_provider.dart';
 
 class BudgetListItem extends StatelessWidget {
   final BudgetModel budget;
@@ -10,6 +13,7 @@ class BudgetListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currency = context.watch<CurrencyProvider>().currency;
     final percentage = budget.percentage;
     final isExceeded = percentage > 200;
     Color progressColor;
@@ -62,7 +66,7 @@ class BudgetListItem extends StatelessWidget {
                     ),
 
                     ),SizedBox(height: 4,),
-                    Text('${percentage.toStringAsFixed(0)}% used',
+                    Text(    '${currency.symbol}${budget.amount.toStringAsFixed(0)}',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -85,13 +89,13 @@ Column(
     Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('\$${budget.spent.toStringAsFixed(0)} spent',
+        Text(  '${currency.symbol}${budget.spent.toStringAsFixed(0)} spent',
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
             color: AppColors.gray900,
           ),),
-        Text('\$${budget.remaining.toStringAsFixed(0)} left',
+        Text(   '${currency.symbol}${budget.remaining.toStringAsFixed(0)} left',
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,

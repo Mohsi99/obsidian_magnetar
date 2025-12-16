@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:obsidian_magnetar/presentation/screens/transactions/transactions_screen.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/contants/app_colors.dart';
 import '../../../core/contants/app_dimensions.dart';
 import '../../../core/contants/app_strings.dart';
 import '../../../core/model/transactions_model.dart';
+import '../../../providers/currency_provider.dart';
 import '../auth/login_scrren.dart';
 import '../transactions/widget/transaction_list_item.dart';
 
@@ -70,137 +72,150 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.gray50,
-
-      appBar: AppBar(
-        backgroundColor: AppColors.gray50,
-
-        title: const Text(AppStrings.dashboard),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: AppColors.gray50,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            floating: true,
+            snap: true,
+            title: const Text(AppStrings.dashboard),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.logout),
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => const LoginScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-              );
-            },
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppDimensions.lg,
+              AppDimensions.lg,
+              AppDimensions.lg,
+              AppDimensions.lg + 80,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  _buildDashboardContent(),
+                ],
+              ),
+            ),
           ),
         ],
       ),
-      body: _buildDashboard(),
     );
   }
 
-  Widget _buildDashboard() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(AppDimensions.lg, AppDimensions.lg,
-          AppDimensions.lg, AppDimensions.lg + 80),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Balance Card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppDimensions.xl2),
-            decoration: BoxDecoration(
-              gradient: AppColors.balanceCardGradient,
-              borderRadius: BorderRadius.circular(AppDimensions.radius2xl),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary500.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppStrings.totalBalance,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '\$0.00',
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppDimensions.xl2),
-
-          // Income/Expense Summary
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  AppStrings.income,
-                  '\$0.00',
-                  AppColors.success500,
-                  Icons.arrow_upward,
-                ),
-              ),
-              const SizedBox(width: AppDimensions.lg),
-              Expanded(
-                child: _buildSummaryCard(
-                  AppStrings.expense,
-                  '\$0.00',
-                  AppColors.danger500,
-                  Icons.arrow_downward,
-                ),
+  Widget _buildDashboardContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppDimensions.xl2),
+          decoration: BoxDecoration(
+            gradient: AppColors.balanceCardGradient,
+            borderRadius: BorderRadius.circular(AppDimensions.radius2xl),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary500.withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          const SizedBox(height: AppDimensions.xl2),
-
-          // Recent Transactions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppStrings.recentTransactions,
-                style: Theme.of(context).textTheme.titleLarge,
+                AppStrings.totalBalance,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Colors.white.withOpacity(0.8),
+                    ),
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TransactionsScreen(),
-                      ));
-                },
-                child: const Text(AppStrings.seeAll),
+              const SizedBox(height: 8),
+              Text(
+                '${context.watch<CurrencyProvider>().currency.symbol}0.00',
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
           ),
-          const SizedBox(height: AppDimensions.md),
-
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _recentTransactions.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              return TransactionListItem(
-                  transaction: _recentTransactions[index]);
-            },
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: AppDimensions.xl2),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCard(
+                AppStrings.income,
+                '${context.watch<CurrencyProvider>().currency.symbol}0.00',
+                AppColors.success500,
+                Icons.arrow_upward,
+              ),
+            ),
+            const SizedBox(width: AppDimensions.lg),
+            Expanded(
+              child: _buildSummaryCard(
+                AppStrings.expense,
+                '${context.watch<CurrencyProvider>().currency.symbol}\$0.00',
+                AppColors.danger500,
+                Icons.arrow_downward,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppDimensions.xl2),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              AppStrings.recentTransactions,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TransactionsScreen(),
+                  ),
+                );
+              },
+              child: const Text(AppStrings.seeAll),
+            ),
+          ],
+        ),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _recentTransactions.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            return TransactionListItem(
+              transaction: _recentTransactions[index],
+            );
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildSummaryCard(
-      String title, String amount, Color color, IconData icon) {
+    String title,
+    String amount,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.lg),
       decoration: BoxDecoration(

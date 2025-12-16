@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:obsidian_magnetar/presentation/screens/profile/profile_screen.dart';
 import 'package:obsidian_magnetar/presentation/screens/transactions/transactions_screen.dart';
 
 import '../budget/budget_screen.dart';
@@ -30,7 +31,8 @@ class _BottomNavigationBarViewState extends State<BottomNavigationBarView> {
       const TransactionsScreen(),
       const BudgetScreen(),
       const PlaceholderScreen(title: 'Analytics', icon: Icons.analytics),
-      const PlaceholderScreen(title: 'Profile', icon: Icons.person),
+      const ProfileScreen()
+
     ];
 
     return Scaffold(

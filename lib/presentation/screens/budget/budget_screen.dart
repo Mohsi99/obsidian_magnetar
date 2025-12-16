@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:obsidian_magnetar/presentation/screens/budget/widget/budget_list_item.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/contants/app_colors.dart';
 import '../../../core/model/budget_model.dart';
+import '../../../providers/currency_provider.dart';
 
 class BudgetScreen extends StatelessWidget {
   const BudgetScreen({super.key});
@@ -63,10 +65,11 @@ class BudgetScreen extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
+            automaticallyImplyLeading: false,
+            backgroundColor: const Color(0xFFF8FAFC),
             floating: true,
             snap: true,
             elevation: 0,
-            backgroundColor: Colors.transparent,
             title: Text(
               'My Budgets',
               style: GoogleFonts.inter(
@@ -94,7 +97,6 @@ class BudgetScreen extends StatelessWidget {
               const SizedBox(width: 16),
             ],
           ),
-
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             sliver: SliverList(
@@ -106,9 +108,7 @@ class BudgetScreen extends StatelessWidget {
                     totalRemaining: totalRemaining,
                     progress: overallProgress,
                   ),
-
                   const SizedBox(height: 24),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -126,7 +126,7 @@ class BudgetScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                           backgroundColor:
-                          AppColors.primary500.withValues(alpha: 0.1),
+                              AppColors.primary500.withValues(alpha: 0.1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
@@ -152,13 +152,10 @@ class BudgetScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 16),
-
                   ...budgets
                       .map((budget) => BudgetListItem(budget: budget))
                       .toList(),
-
                   const SizedBox(height: 80),
                 ],
               ),
@@ -169,7 +166,6 @@ class BudgetScreen extends StatelessWidget {
     );
   }
 }
-
 
 class _BudgetSummaryCard extends StatelessWidget {
   final double totalBudget;
@@ -242,7 +238,8 @@ class _BudgetSummaryCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 child: Text(
                   '${(progress * 100).toStringAsFixed(0)}% Used',
@@ -264,7 +261,7 @@ class _BudgetSummaryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '\$${totalSpent.toStringAsFixed(0)}',
+                    '${context.watch<CurrencyProvider>().currency.symbol}${totalSpent.toStringAsFixed(0)}',
                     style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 32,
@@ -272,7 +269,7 @@ class _BudgetSummaryCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'of \$${totalBudget.toStringAsFixed(0)}',
+                    'of ${context.watch<CurrencyProvider>().currency.symbol}${totalBudget.toStringAsFixed(0)}',
                     style: GoogleFonts.inter(
                       color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 16,
@@ -339,7 +336,7 @@ class _BudgetSummaryCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '\$${totalRemaining.toStringAsFixed(0)}',
+                '${context.watch<CurrencyProvider>().currency.symbol}${totalRemaining.toStringAsFixed(0)}',
                 style: GoogleFonts.inter(
                   color: Colors.white,
                   fontSize: 14,
