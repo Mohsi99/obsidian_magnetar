@@ -3,8 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:obsidian_magnetar/presentation/screens/budget/widget/budget_list_item.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/contants/app_colors.dart';
-import '../../../core/model/budget_model.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/data/model/budget_model.dart';
 import '../../../providers/currency_provider.dart';
 
 class BudgetScreen extends StatelessWidget {

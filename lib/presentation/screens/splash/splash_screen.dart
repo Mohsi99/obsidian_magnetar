@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:obsidian_magnetar/presentation/screens/on_boarding/onboarding_screen.dart';
 
-import '../../../core/contants/app_colors.dart';
-import '../../../core/contants/app_strings.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
+
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

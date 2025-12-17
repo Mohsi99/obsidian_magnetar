@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/contants/app_colors.dart';
-import '../../../../core/model/transactions_model.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/data/model/transactions_model.dart';
 import '../../../../providers/currency_provider.dart';
 
 class TransactionListItem extends StatelessWidget {

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:obsidian_magnetar/core/contants/app_text_styles.dart';
-import 'package:obsidian_magnetar/presentation/screens/auth/login_scrren.dart';
 
-import '../../../core/contants/app_colors.dart';
-import '../../../core/contants/app_strings.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/app_text_styles.dart';
+import '../auth/login_screen.dart';
+
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

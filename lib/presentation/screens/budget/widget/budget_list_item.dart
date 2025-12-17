@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:obsidian_magnetar/core/contants/app_colors.dart';
-import 'package:obsidian_magnetar/core/model/budget_model.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/data/model/budget_model.dart';
 import '../../../../providers/currency_provider.dart';
 
 class BudgetListItem extends StatelessWidget {

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:obsidian_magnetar/presentation/screens/transactions/widget/transaction_list_item.dart';
 
-import '../../../core/contants/app_colors.dart';
-import '../../../core/contants/app_dimensions.dart';
-import '../../../core/contants/app_strings.dart';
-import '../../../core/model/transactions_model.dart';
+
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_strings.dart';
+import '../../../core/data/model/transactions_model.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});

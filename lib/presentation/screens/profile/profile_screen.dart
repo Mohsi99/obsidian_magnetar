@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:obsidian_magnetar/core/contants/app_colors.dart';
 import 'package:obsidian_magnetar/providers/currency_provider.dart';
 import 'package:provider/provider.dart';
+
+import '../../../core/constants/app_colors.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
