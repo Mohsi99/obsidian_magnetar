@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:obsidian_magnetar/presentation/screens/bottom_navigation_bar_view/bottom_navigation_bar_screen.dart';
-import 'package:obsidian_magnetar/presentation/screens/home/home_screen.dart';
+import 'package:obsidian_magnetar/core/data/services/auth_services.dart';
 
-import '../../../core/contants/app_colors.dart';
-import '../../../core/contants/app_strings.dart';
 
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
+import '../bottom_navigation_bar_view/bottom_navigation_bar_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
+  final _authService = AuthServices();
 
   bool _isLogin = true;
   bool _isLoading = false;
@@ -60,17 +61,38 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
-
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const BottomNavigationBarView()),
-      );
+    try {
+      if (_isLogin) {
+        await _authService.signInWithEmail(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim());
+      } else {
+        await _authService.sinUpWithEmail(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim());
+      }
+      if (mounted) {
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BottomNavigationBarView(),
+            ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.danger500,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -100,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppColors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary500.withOpacity(0.15),
+                          color: AppColors.primary500.withValues(alpha: 0.15),
                           blurRadius: 24,
                           offset: const Offset(0, 8),
                         ),
@@ -150,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.gray900.withOpacity(0.05),
+                        color: AppColors.gray900.withValues(alpha: 0.05),
                         blurRadius: 32,
                         offset: const Offset(0, 4),
                       ),
@@ -178,7 +200,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 )
                               : const SizedBox.shrink(),
                         ),
-
                         _buildTextField(
                           controller: _emailController,
                           label: AppStrings.email,
@@ -188,7 +209,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           isLast: false,
                         ),
                         const SizedBox(height: 20),
-
                         _buildTextField(
                           controller: _passwordController,
                           label: AppStrings.password,
@@ -201,9 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           isLast: true,
                           onSubmitted: (_) => _submit(),
                         ),
-
                         const SizedBox(height: 32),
-
                         SizedBox(
                           height: 56,
                           child: ElevatedButton(
@@ -213,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shadowColor:
-                                  AppColors.primary500.withOpacity(0.4),
+                                  AppColors.primary500.withValues(alpha: 0.4),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
