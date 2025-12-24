@@ -7,6 +7,7 @@ import 'package:obsidian_magnetar/presentation/screens/transactions/transactions
 import '../budget/budget_screen.dart';
 import '../home/home_screen.dart';
 import '../placeholder_screen.dart';
+import '../transactions/add_transaction_screen.dart';
 
 class BottomNavigationBarView extends StatefulWidget {
   const BottomNavigationBarView({super.key});
@@ -106,7 +107,11 @@ class _BottomNavigationBarViewState extends State<BottomNavigationBarView> {
         padding: const EdgeInsets.only(bottom: 60.0),
         child: FloatingActionButton(
           onPressed: () {
-            // TODO: Navigate to add transaction
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const AddTransactionScreen(),
+              ),
+            );
           },
           backgroundColor: const Color(0xff27272E),
           child: const Icon(Icons.add, color: Colors.white),

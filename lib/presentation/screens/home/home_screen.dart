@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:obsidian_magnetar/presentation/screens/transactions/transactions_screen.dart';
 import 'package:provider/provider.dart';
-
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
+
 import '../../../core/data/model/transactions_model.dart';
 import '../../../providers/currency_provider.dart';
 import '../auth/login_screen.dart';
+import '../transactions/transactions_screen.dart';
+
+import '../transactions/add_transaction_screen.dart';
 import '../transactions/widget/transaction_list_item.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -168,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: _buildSummaryCard(
                 AppStrings.expense,
-                '${context.watch<CurrencyProvider>().currency.symbol}\$0.00',
+                '${context.watch<CurrencyProvider>().currency.symbol}0.00',
                 AppColors.danger500,
                 Icons.arrow_downward,
               ),
@@ -196,6 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+        const SizedBox(height: 12),
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
