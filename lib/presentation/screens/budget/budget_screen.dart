@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:obsidian_magnetar/presentation/screens/budget/add_budget_screen.dart';
 import 'package:obsidian_magnetar/presentation/screens/budget/widget/budget_list_item.dart';
 import 'package:provider/provider.dart';
 
@@ -121,7 +122,13 @@ class BudgetScreen extends StatelessWidget {
                         ),
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddBudgetScreen(),
+                              ));
+                        },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
