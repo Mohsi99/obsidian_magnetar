@@ -146,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                '${context.watch<CurrencyProvider>().currency.symbol}0.00',
+                '${context.watch<CurrencyProvider>().currency.symbol}100.00',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -161,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: _buildSummaryCard(
                 AppStrings.income,
-                '${context.watch<CurrencyProvider>().currency.symbol}0.00',
+                '${context.watch<CurrencyProvider>().currency.symbol}200.00',
                 AppColors.success500,
                 Icons.arrow_upward,
               ),
@@ -170,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: _buildSummaryCard(
                 AppStrings.expense,
-                '${context.watch<CurrencyProvider>().currency.symbol}0.00',
+                '${context.watch<CurrencyProvider>().currency.symbol}100.00',
                 AppColors.danger500,
                 Icons.arrow_downward,
               ),

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:obsidian_magnetar/core/data/services/auth_services.dart';
-
-
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_text_styles.dart';
+import '../../../providers/auth_provider.dart';
 import '../bottom_navigation_bar_view/bottom_navigation_bar_screen.dart';
+import '../home/home_screen.dart';
+
+
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  final _authService = AuthServices();
+
 
   bool _isLogin = true;
   bool _isLoading = false;
@@ -32,6 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // Simple validation methods (UI only)
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Email is required';
@@ -61,23 +66,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
+
     try {
       if (_isLogin) {
-        await _authService.signInWithEmail(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim());
+        await context.read<AppAuthProvider>().signIn(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
       } else {
-        await _authService.sinUpWithEmail(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim());
+        await context.read<AppAuthProvider>().signUp(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
       }
+
       if (mounted) {
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BottomNavigationBarView(),
-            ));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const BottomNavigationBarView()),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -98,6 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Theme references for cleaner access
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
@@ -122,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppColors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary500.withValues(alpha: 0.15),
+                          color: AppColors.primary500.withOpacity(0.15),
                           blurRadius: 24,
                           offset: const Offset(0, 8),
                         ),
@@ -144,6 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
 
+                // Header Text
                 Text(
                   _isLogin ? 'Welcome Back!' : 'Create Account',
                   style: textTheme.displaySmall?.copyWith(
@@ -165,6 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
 
+                // Main Form Card
                 Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
@@ -172,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.gray900.withValues(alpha: 0.05),
+                        color: AppColors.gray900.withOpacity(0.05),
                         blurRadius: 32,
                         offset: const Offset(0, 4),
                       ),
@@ -183,23 +194,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        // Name field (only for sign up)
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 300),
                           child: !_isLogin
                               ? Column(
-                                  children: [
-                                    _buildTextField(
-                                      controller: _nameController,
-                                      label: AppStrings.displayName,
-                                      icon: Icons.person_outline_rounded,
-                                      validator: _validateName,
-                                      isLast: false,
-                                    ),
-                                    const SizedBox(height: 20),
-                                  ],
-                                )
+                            children: [
+                              _buildTextField(
+                                controller: _nameController,
+                                label: AppStrings.displayName,
+                                icon: Icons.person_outline_rounded,
+                                validator: _validateName,
+                                isLast: false,
+                              ),
+                              const SizedBox(height: 20),
+                            ],
+                          )
                               : const SizedBox.shrink(),
                         ),
+
+                        // Email field
                         _buildTextField(
                           controller: _emailController,
                           label: AppStrings.email,
@@ -209,19 +223,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           isLast: false,
                         ),
                         const SizedBox(height: 20),
+
+                        // Password field
                         _buildTextField(
                           controller: _passwordController,
                           label: AppStrings.password,
                           icon: Icons.lock_outline_rounded,
                           isPassword: true,
                           obscureText: _obscurePassword,
-                          onObscurePressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
+                          onObscurePressed: () => setState(() => _obscurePassword = !_obscurePassword),
                           validator: _validatePassword,
                           isLast: true,
                           onSubmitted: (_) => _submit(),
                         ),
+
                         const SizedBox(height: 32),
+
+                        // Action Button
                         SizedBox(
                           height: 56,
                           child: ElevatedButton(
@@ -230,36 +248,32 @@ class _LoginScreenState extends State<LoginScreen> {
                               backgroundColor: AppColors.primary500,
                               foregroundColor: Colors.white,
                               elevation: 0,
-                              shadowColor:
-                                  AppColors.primary500.withValues(alpha: 0.4),
+                              shadowColor: AppColors.primary500.withOpacity(0.4),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ).copyWith(
-                              elevation:
-                                  MaterialStateProperty.resolveWith((states) {
-                                return states.contains(MaterialState.pressed)
-                                    ? 0
-                                    : 8;
+                              elevation: MaterialStateProperty.resolveWith((states) {
+                                return states.contains(MaterialState.pressed) ? 0 : 8;
                               }),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      color: Colors.white,
-                                    ),
-                                  )
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.white,
+                              ),
+                            )
                                 : Text(
-                                    _isLogin ? 'Sign In' : 'Create Account',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
+                              _isLogin ? 'Sign In' : 'Create Account',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -269,15 +283,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 24),
 
+                // Toggle Auth Mode
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      _isLogin
-                          ? "Don't have an account?"
-                          : "Already have an account?",
-                      style: textTheme.bodyMedium
-                          ?.copyWith(color: AppColors.gray600),
+                      _isLogin ? "Don't have an account?" : "Already have an account?",
+                      style: textTheme.bodyMedium?.copyWith(color: AppColors.gray600),
                     ),
                     TextButton(
                       onPressed: () => setState(() => _isLogin = !_isLogin),
@@ -325,15 +337,13 @@ class _LoginScreenState extends State<LoginScreen> {
         prefixIcon: Icon(icon, color: AppColors.gray400, size: 22),
         suffixIcon: isPassword
             ? IconButton(
-                icon: Icon(
-                  obscureText
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  color: AppColors.gray400,
-                  size: 22,
-                ),
-                onPressed: onObscurePressed,
-              )
+          icon: Icon(
+            obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            color: AppColors.gray400,
+            size: 22,
+          ),
+          onPressed: onObscurePressed,
+        )
             : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -351,8 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.danger500, width: 1.5),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),
     );
   }
