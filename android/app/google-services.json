@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "26534124732",
+    "project_id": "obsidian-magnetar",
+    "storage_bucket": "obsidian-magnetar.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:26534124732:android:870223d7897e6d44fc84b9",
+        "android_client_info": {
+          "package_name": "com.example.obsidian_magnetar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYqFBD6I956nv85hb5e9ijYWkU0SakCcI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
