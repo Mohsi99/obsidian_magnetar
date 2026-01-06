@@ -1,12 +1,14 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:obsidian_magnetar/presentation/screens/splash/splash_screen.dart';
 import 'package:obsidian_magnetar/providers/currency_provider.dart';
-import 'package:obsidian_magnetar/providers/auth_provider.dart'; // Import your AuthProvider
+import 'package:obsidian_magnetar/providers/auth_provider.dart';
+import 'package:obsidian_magnetar/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // Use alias instead
+import 'package:firebase_auth/firebase_auth.dart'
+    as firebase_auth; // Use alias instead
 import 'core/data/services/auth_services.dart';
+import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -28,6 +30,9 @@ void main() async {
         ChangeNotifierProvider<CurrencyProvider>(
           create: (_) => CurrencyProvider(),
         ),
+        ChangeNotifierProvider<ThemeProvider>(
+          create: (_) => ThemeProvider(),
+        ),
         ChangeNotifierProvider<AppAuthProvider>(
           create: (context) => AppAuthProvider(
             authService: context.read<AuthService>(),
@@ -44,9 +49,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        return MaterialApp(
+          title: 'Finance Manager',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }

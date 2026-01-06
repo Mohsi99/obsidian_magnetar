@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:obsidian_magnetar/presentation/screens/transactions/search_screen.dart';
 import 'package:obsidian_magnetar/presentation/screens/transactions/widget/transaction_list_item.dart';
-
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -87,7 +88,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
-
           AppStrings.transactions,
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -97,11 +97,65 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: AppColors.gray900),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SearchScreen(),
+                  ));
+            },
           ),
           IconButton(
             icon: const Icon(Icons.filter_list, color: AppColors.gray900),
-            onPressed: () {},
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.white,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (context) => Container(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Filter Transactions',
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.gray900,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Mock Filters
+                      _buildFilterOption(context, 'Date Range'),
+                      _buildFilterOption(context, 'Category'),
+                      _buildFilterOption(context, 'Amount'),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary500,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          'Apply Filters',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -232,8 +286,29 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     if (DateUtils.isSameDay(date, now)) return 'Today';
-    if (DateUtils.isSameDay(date, now.subtract(const Duration(days: 1))))
+    if (DateUtils.isSameDay(date, now.subtract(const Duration(days: 1)))) {
       return 'Yesterday';
+    }
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  Widget _buildFilterOption(BuildContext context, String title) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              color: AppColors.gray600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: AppColors.gray400),
+        ],
+      ),
+    );
   }
 }

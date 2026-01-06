@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:obsidian_magnetar/providers/currency_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../providers/currency_provider.dart';
+import '../../../providers/theme_provider.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -15,6 +17,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         title: Text(
           "Profile",
@@ -60,8 +63,10 @@ class ProfileScreen extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.dark_mode_outlined,
                 title: 'Theme',
-                value: 'Light',
-                onTap: () {},
+                value: context.watch<ThemeProvider>().isDarkMode ? 'Dark' : 'Light',
+                onTap: () {
+                  context.read<ThemeProvider>().toggleTheme();
+                },
               ),
               _SettingsTile(
                 icon: Icons.help_outline,
@@ -236,29 +241,29 @@ class _ProfileHeader extends StatelessWidget {
           const SizedBox(width: 20),
           Expanded(
               child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "John Doe",
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.gray900,
-                ),
-              ),
-              SizedBox(
-                height: 4,
-              ),
-              Text(
-                'john.doe@example.com',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.gray500,
-                ),
-              ),
-            ],
-          )),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "John Doe",
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gray900,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 4,
+                  ),
+                  Text(
+                    'john.doe@example.com',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.gray500,
+                    ),
+                  ),
+                ],
+              )),
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(

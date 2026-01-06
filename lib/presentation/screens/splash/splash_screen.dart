@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:obsidian_magnetar/presentation/screens/on_boarding/onboarding_screen.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:obsidian_magnetar/presentation/screens/bottom_navigation_bar_view/bottom_navigation_bar_screen.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
-
+import '../on_boarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,16 +16,41 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  StreamSubscription<User?>? _authSubscription;
+
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 3), () {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OnboardingScreen(),
-          ));
-    });
+
+    _authSubscription =
+        FirebaseAuth.instance.authStateChanges().listen((User? user) {
+          if (!mounted) return;
+
+
+          if (user == null) {
+            Timer(const Duration(seconds: 3), () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OnboardingScreen(),
+                  ));
+            });
+          } else {
+            Timer(const Duration(seconds: 3), () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BottomNavigationBarView(),
+                  ));
+            });
+          }
+        });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -38,12 +64,11 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App Logo
               Container(
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -54,22 +79,28 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 24),
 
-              // App Name
               Text(
                 AppStrings.appName,
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .displayMedium
+                    ?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
 
-              // Tagline
               Text(
                 AppStrings.appTagline,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white.withOpacity(0.9),
-                    ),
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
               ),
 
 
@@ -79,4 +110,5 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
+
 }

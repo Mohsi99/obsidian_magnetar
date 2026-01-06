@@ -80,7 +80,14 @@ class BudgetScreen extends StatelessWidget {
             ),
             actions: [
               IconButton(
-                onPressed: () {},
+                onPressed: () async {
+                  await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2030),
+                  );
+                },
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
