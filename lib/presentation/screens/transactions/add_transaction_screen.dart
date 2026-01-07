@@ -16,7 +16,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  String _selectedCategory = 'Groceries';
+  final String _selectedCategory = 'Groceries';
   bool _isRecurring = false;
 
   @override

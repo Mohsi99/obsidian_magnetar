@@ -4,6 +4,7 @@ import 'package:obsidian_magnetar/presentation/screens/splash/splash_screen.dart
 import 'package:obsidian_magnetar/providers/currency_provider.dart';
 import 'package:obsidian_magnetar/providers/auth_provider.dart';
 import 'package:obsidian_magnetar/providers/theme_provider.dart';
+import 'package:obsidian_magnetar/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     as firebase_auth; // Use alias instead
@@ -35,6 +36,11 @@ void main() async {
         ),
         ChangeNotifierProvider<AppAuthProvider>(
           create: (context) => AppAuthProvider(
+            authService: context.read<AuthService>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => UserProvider(
             authService: context.read<AuthService>(),
           ),
         ),

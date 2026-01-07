@@ -30,11 +30,11 @@ class AppAuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> signUp(String email, String password) async {
+  Future<void> signUp(String email, String password, String fullName) async {
     _isLoading = true;
     notifyListeners();
     try {
-      await _authService.sinUpWithEmail(email: email, password: password);
+      await _authService.signUpWithEmail(email: email, password: password, fullName: fullName);
     } finally {
       _isLoading = false;
       notifyListeners();

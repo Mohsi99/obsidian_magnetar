@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:obsidian_magnetar/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/currency_provider.dart';
 import '../../../providers/theme_provider.dart';
-
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -63,7 +63,9 @@ class ProfileScreen extends StatelessWidget {
               _SettingsTile(
                 icon: Icons.dark_mode_outlined,
                 title: 'Theme',
-                value: context.watch<ThemeProvider>().isDarkMode ? 'Dark' : 'Light',
+                value: context.watch<ThemeProvider>().isDarkMode
+                    ? 'Dark'
+                    : 'Light',
                 onTap: () {
                   context.read<ThemeProvider>().toggleTheme();
                 },
@@ -135,7 +137,8 @@ class ProfileScreen extends StatelessWidget {
                       controller: scrollController,
                       children: AppCurrencies.all.map((currency) {
                         final isSelected =
-                            context.read<CurrencyProvider>().currency == currency;
+                            context.read<CurrencyProvider>().currency ==
+                                currency;
                         return InkWell(
                           onTap: () {
                             context
@@ -195,7 +198,6 @@ class ProfileScreen extends StatelessWidget {
       },
     );
   }
-
 }
 
 class _ProfileHeader extends StatelessWidget {
@@ -203,6 +205,12 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userModel = context.watch<UserProvider>().userModel;
+    final displayName = userModel?.displayName ?? 'User';
+    final email = userModel?.email ?? 'No email';
+    final initials = displayName.isNotEmpty
+        ? displayName.substring(0, 1).toUpperCase()
+        : 'U';
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -229,7 +237,7 @@ class _ProfileHeader extends StatelessWidget {
               radius: 30,
               backgroundColor: AppColors.primary100,
               child: Text(
-                'JD',
+                initials,
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -241,41 +249,29 @@ class _ProfileHeader extends StatelessWidget {
           const SizedBox(width: 20),
           Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "John Doe",
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.gray900,
-                    ),
-                  ),
-                  SizedBox(
-                    height: 4,
-                  ),
-                  Text(
-                    'john.doe@example.com',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.gray500,
-                    ),
-                  ),
-                ],
-              )),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.gray50,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.edit_outlined,
-              size: 20,
-              color: AppColors.gray500,
-            ),
-          ),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                displayName,
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.gray900,
+                ),
+              ),
+              SizedBox(
+                height: 4,
+              ),
+              Text(
+                email,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.gray500,
+                ),
+              ),
+            ],
+          )),
         ],
       ),
     );

@@ -3,10 +3,9 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../providers/auth_provider.dart';
+import '../../../providers/auth_provider.dart' as local_auth;
 import '../bottom_navigation_bar_view/bottom_navigation_bar_screen.dart';
 import '../home/home_screen.dart';
-
 
 import 'package:provider/provider.dart';
 
@@ -71,14 +70,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       if (_isLogin) {
-        await context.read<AppAuthProvider>().signIn(
+        await context.read<local_auth.AppAuthProvider>().signIn(
           _emailController.text.trim(),
           _passwordController.text.trim(),
         );
       } else {
-        await context.read<AppAuthProvider>().signUp(
+        await context.read<local_auth.AppAuthProvider>().signUp(
           _emailController.text.trim(),
           _passwordController.text.trim(),
+          _nameController.text.trim(),
         );
       }
 

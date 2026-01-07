@@ -8,13 +8,20 @@ class AuthService {
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  Future<UserCredential> sinUpWithEmail({
+  Stream<User?> get userChanges => _auth.userChanges();
+
+  Future<UserCredential> signUpWithEmail({
     required String email,
     required String password,
+    required String fullName,
   }) async {
     try {
       final userCredential = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
+
+      await userCredential.user?.updateDisplayName(fullName);
+      await userCredential.user?.reload(); // Refresh user data
+
       await userCredential.user?.sendEmailVerification();
       return userCredential;
     } on FirebaseAuthException catch (e) {
