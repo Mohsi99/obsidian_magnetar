@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:obsidian_magnetar/core/data/services/category_services.dart';
 import 'package:obsidian_magnetar/presentation/screens/profile/select_category_screen.dart';
 import 'package:obsidian_magnetar/presentation/screens/splash/splash_screen.dart';
+import 'package:obsidian_magnetar/providers/category_provider.dart';
 import 'package:obsidian_magnetar/providers/currency_provider.dart';
 import 'package:obsidian_magnetar/providers/auth_provider.dart';
 import 'package:obsidian_magnetar/providers/theme_provider.dart';
@@ -43,6 +45,11 @@ void main() async {
         ChangeNotifierProvider(
           create: (context) => UserProvider(
             authService: context.read<AuthService>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CategoryProvider(
+            categoryService: context.read<CategoryService>(),
           ),
         ),
       ],
