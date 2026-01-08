@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:obsidian_magnetar/presentation/screens/profile/select_category_screen.dart';
 import 'package:obsidian_magnetar/presentation/screens/splash/splash_screen.dart';
 import 'package:obsidian_magnetar/providers/currency_provider.dart';
 import 'package:obsidian_magnetar/providers/auth_provider.dart';
@@ -63,7 +64,7 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
-          home: const SplashScreen(),
+          home: SplashScreen(),
         );
       },
     );

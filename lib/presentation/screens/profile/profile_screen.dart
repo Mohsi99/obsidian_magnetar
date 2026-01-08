@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:obsidian_magnetar/presentation/screens/profile/select_category_screen.dart';
 import 'package:obsidian_magnetar/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -45,6 +46,18 @@ class ProfileScreen extends StatelessWidget {
                 title: "Currency",
                 onTap: () => _showCurrencyPicker(context),
                 value: "${currency.code} ${currency.symbol}",
+              ),
+              _SettingsTile(
+                icon: Icons.category_outlined,
+                title: 'Categories',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SelectCategoryScreen(),
+                    ),
+                  );
+                },
               ),
               _SettingsTile(
                 icon: Icons.notifications_outlined,
