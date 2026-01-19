@@ -1,62 +1,58 @@
-import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../core/data/model/category_model.dart';
 import '../core/data/services/category_services.dart';
 
 class CategoryProvider extends ChangeNotifier {
-  final CategoryService _categoryService;
-
+  CategoryService? _categoryService;
   List<CategoryModel> _categories = [];
   bool _isLoading = false;
 
-  CategoryProvider({required CategoryService categoryService})
-      : _categoryService = categoryService;
-
   List<CategoryModel> get categories => _categories;
-
   bool get isLoading => _isLoading;
 
-  Stream<List<CategoryModel>> getCategoriesStream(String userId) {
-    return _categoryService.getCategories(userId);
-  }
+  List<CategoryModel> get expenseCategories =>
+      _categories.where((c) => c.type == 'expense').toList();
 
-  Future<void> addCategory(CategoryModel category) async {
-    _isLoading = true;
-    notifyListeners();
-    try {
-      await _categoryService.addCategory(category);
-    } catch (e) {
-      debugPrint("Error adding category: $e");
-      rethrow;
-    } finally {
-      _isLoading = false;
+  List<CategoryModel> get incomeCategories =>
+      _categories.where((c) => c.type == 'income').toList();
+
+  void updateUser(User? user) {
+    if (user != null) {
+      if (_categoryService?.userId != user.uid) {
+        _categoryService = CategoryService(userId: user.uid);
+        _fetchCategories();
+      }
+    } else {
+      _categoryService = null;
+      _categories = [];
       notifyListeners();
     }
   }
 
-  Future<void> updateCategory(CategoryModel category) async {
-    _isLoading = true;
-    notifyListeners();
-    try {
-      await _categoryService.updateCategory(category);
-    } catch (e) {
-      debugPrint("Error updating category: $e");
-      rethrow;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
+  Future<void> _fetchCategories() async {
+    if (_categoryService == null) return;
 
-  Future<void> deleteCategory(String userId, String categoryId) async {
     _isLoading = true;
-    notifyListeners();
+    notifyListeners(); // Notify loading start
+
     try {
-      await _categoryService.deleteCategory(userId, categoryId);
+      // First ensure default categories exist
+      await _categoryService!.seedDefaultCategories();
+
+      // Then listen to the stream
+      _categoryService!.getCategories().listen((categoryList) {
+        _categories = categoryList;
+        _isLoading = false;
+        notifyListeners();
+      }, onError: (error) {
+        debugPrint('Error in category stream: $error');
+        _isLoading = false;
+        notifyListeners();
+      });
     } catch (e) {
-      debugPrint("Error deleting category: $e");
-      rethrow;
-    } finally {
+      debugPrint('Error fetching categories: $e');
       _isLoading = false;
       notifyListeners();
     }
