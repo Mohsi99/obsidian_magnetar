@@ -4,20 +4,14 @@ import 'package:flutter/material.dart';
 class CategoryModel {
   final String id;
   final String name;
-  final String type;
-  final bool isDefault;
   final int iconCode;
   final int colorValue;
-  final String userId;
 
   CategoryModel({
     required this.id,
     required this.name,
-    required this.type,
     required this.iconCode,
     required this.colorValue,
-    this.isDefault = false,
-    required this.userId,
   });
 
   // Factory to map from Firestore
@@ -26,11 +20,8 @@ class CategoryModel {
     return CategoryModel(
       id: doc.id,
       name: data['name'] ?? '',
-      type: data['type'] ?? 'expense',
-      iconCode: data['iconCode'] ?? 58840,
-      colorValue: data['colorValue'] ?? 0xFF9E9E9E,
-      isDefault: data['isDefault'] ?? false,
-      userId: data['userId'] ?? '',
+      iconCode: data['iconCode'] ?? 58840, // Default to a generic icon (e.g., Icons.category) code point
+      colorValue: data['colorValue'] ?? 0xFF9E9E9E, // Default to Grey
     );
   }
 
@@ -38,11 +29,8 @@ class CategoryModel {
   Map<String, dynamic> toFirestore() {
     return {
       'name': name,
-      'type': type,
       'iconCode': iconCode,
       'colorValue': colorValue,
-      'isDefault': isDefault,
-      'userId': userId,
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
