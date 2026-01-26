@@ -1,179 +1,213 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:obsidian_magnetar/presentation/screens/budget/add_budget_screen.dart';
 import 'package:obsidian_magnetar/presentation/screens/budget/widget/budget_list_item.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/data/model/budget_model.dart';
+import '../../../providers/budget_provider.dart';
 import '../../../providers/currency_provider.dart';
+import 'add_budget_screen.dart';
 
-class BudgetScreen extends StatelessWidget {
+
+class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
 
   @override
+  State<BudgetScreen> createState() => _BudgetScreenState();
+}
+
+class _BudgetScreenState extends State<BudgetScreen> {
+  @override
   Widget build(BuildContext context) {
-    final budgets = [
-      BudgetModel(
-        budgetId: '1',
-        userId: 'user1',
-        categoryId: 'grocery',
-        amount: 500,
-        month: '2023-12',
-        spent: 350,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      BudgetModel(
-        budgetId: '2',
-        userId: 'user1',
-        categoryId: 'transport',
-        amount: 200,
-        month: '2023-12',
-        spent: 180,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      BudgetModel(
-        budgetId: '3',
-        userId: 'user1',
-        categoryId: 'entertainment',
-        amount: 150,
-        month: '2023-12',
-        spent: 45,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      BudgetModel(
-        budgetId: '4',
-        userId: 'user1',
-        categoryId: 'shopping',
-        amount: 300,
-        month: '2023-12',
-        spent: 320,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ];
-
-    final totalBudget = budgets.fold(0.0, (sum, item) => sum + item.amount);
-    final totalSpent = budgets.fold(0.0, (sum, item) => sum + item.spent);
-    final totalRemaining = totalBudget - totalSpent;
-    final overallProgress = (totalSpent / totalBudget).clamp(0.0, 1.0);
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xFFF8FAFC),
-            floating: true,
-            snap: true,
-            elevation: 0,
-            title: Text(
-              'My Budgets',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                color: AppColors.gray900,
-              ),
-            ),
-            actions: [
-              IconButton(
-                onPressed: () async {
-                  await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2030),
-                  );
-                },
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.gray200),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Consumer<BudgetProvider>(
+        builder: (context, budgetProvider, child) {
+          final budgets = budgetProvider.budgets;
+          final isLoading = budgetProvider.isLoading;
+
+          if (isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final textColor = isDark ? Colors.white : AppColors.gray900;
+          final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+
+          // Calculate totals only if budgets exist
+          final totalBudget = budgets.fold(0.0, (sum, item) => sum + item.amount);
+          final totalSpent = budgets.fold(0.0, (sum, item) => sum + item.spent);
+          final totalRemaining = totalBudget - totalSpent;
+
+          double overallProgress = 0.0;
+          if (totalBudget > 0) {
+            overallProgress = (totalSpent / totalBudget).clamp(0.0, 1.0);
+          }
+
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                automaticallyImplyLeading: false,
+                backgroundColor: scaffoldBg,
+                floating: true,
+                snap: true,
+                elevation: 0,
+                title: Text(
+                  'My Budgets',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
                   ),
-                  child: Icon(
-                    Icons.calendar_month_outlined,
-                    size: 20,
-                    color: AppColors.gray600,
+                ),
+                actions: [
+                  IconButton(
+                    onPressed: () async {
+                      await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                      );
+                    },
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isDark ? Theme.of(context).cardTheme.color : Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: isDark ? AppColors.gray600 : AppColors.gray200),
+                      ),
+                      child: Icon(
+                        Icons.calendar_month_outlined,
+                        size: 20,
+                        color: isDark ? Colors.white70 : AppColors.gray600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                ],
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate(
+                    [
+                      // Only show summary card if there are budgets
+                      if (budgets.isNotEmpty) ...[
+                        _BudgetSummaryCard(
+                          totalBudget: totalBudget,
+                          totalSpent: totalSpent,
+                          totalRemaining: totalRemaining,
+                          progress: overallProgress,
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Your Limits',
+                              style: GoogleFonts.inter(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: textColor,
+                              ),
+                            ),
+                            _buildCreateButton(context),
+                          ],
+                        ),
+                      ] else ...[
+                        // Empty State
+                        const SizedBox(height: 100),
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary100.withOpacity(0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.account_balance_wallet_outlined,
+                                  size: 48,
+                                  color: AppColors.primary500,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                'No Budgets Yet',
+                                style: GoogleFonts.inter(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: textColor,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Create a budget to track your spending',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: AppColors.gray500,
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+                              _buildCreateButton(context, isLarge: true),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 16),
+                      if (budgets.isNotEmpty)
+                        ...budgets
+                            .map((budget) => BudgetListItem(budget: budget))
+                            .toList(),
+                      const SizedBox(height: 80),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
             ],
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                [
-                  _BudgetSummaryCard(
-                    totalBudget: totalBudget,
-                    totalSpent: totalSpent,
-                    totalRemaining: totalRemaining,
-                    progress: overallProgress,
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Your Limits',
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.gray900,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AddBudgetScreen(),
-                              ));
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          backgroundColor:
-                              AppColors.primary500.withValues(alpha: 0.1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Create New',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary600,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.add,
-                              size: 16,
-                              color: AppColors.primary600,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ...budgets
-                      .map((budget) => BudgetListItem(budget: budget))
-                      .toList(),
-                  const SizedBox(height: 80),
-                ],
-              ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildCreateButton(BuildContext context, {bool isLarge = false}) {
+    return TextButton(
+      onPressed: () {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddBudgetScreen(),
+            ));
+      },
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.symmetric(
+            horizontal: isLarge ? 32 : 12, vertical: isLarge ? 16 : 8),
+        backgroundColor:
+        isLarge ? AppColors.primary500 : AppColors.primary500.withOpacity(0.1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Create New Budget',
+            style: GoogleFonts.inter(
+              fontSize: isLarge ? 16 : 13,
+              fontWeight: FontWeight.w600,
+              color: isLarge ? Colors.white : AppColors.primary600,
             ),
+          ),
+          const SizedBox(width: 4),
+          Icon(
+            Icons.add,
+            size: isLarge ? 20 : 16,
+            color: isLarge ? Colors.white : AppColors.primary600,
           ),
         ],
       ),
@@ -212,7 +246,7 @@ class _BudgetSummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4338CA).withValues(alpha: 0.3),
+            color: const Color(0xFF4338CA).withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -228,9 +262,9 @@ class _BudgetSummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'December 2023',
+                    'December 2023', // TODO: Make dynamic date
                     style: GoogleFonts.inter(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: Colors.white.withOpacity(0.8),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -248,12 +282,12 @@ class _BudgetSummaryCard extends StatelessWidget {
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
                   border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  Border.all(color: Colors.white.withOpacity(0.1)),
                 ),
                 child: Text(
                   '${(progress * 100).toStringAsFixed(0)}% Used',
@@ -285,7 +319,7 @@ class _BudgetSummaryCard extends StatelessWidget {
                   Text(
                     'of ${context.watch<CurrencyProvider>().currency.symbol}${totalBudget.toStringAsFixed(0)}',
                     style: GoogleFonts.inter(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: Colors.white.withOpacity(0.7),
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -296,7 +330,7 @@ class _BudgetSummaryCard extends StatelessWidget {
               Text(
                 'Spent this month',
                 style: GoogleFonts.inter(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.white.withOpacity(0.7),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -313,7 +347,7 @@ class _BudgetSummaryCard extends StatelessWidget {
                 height: 8,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -326,7 +360,7 @@ class _BudgetSummaryCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: Colors.white.withOpacity(0.5),
                         blurRadius: 6,
                         offset: const Offset(0, 0),
                       ),
@@ -345,7 +379,7 @@ class _BudgetSummaryCard extends StatelessWidget {
               Text(
                 'Remaining: ',
                 style: GoogleFonts.inter(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.white.withOpacity(0.7),
                   fontSize: 14,
                 ),
               ),

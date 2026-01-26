@@ -1,51 +1,58 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BudgetModel {
-  final String budgetId;
-  final String userId;
+  final String id;
   final String categoryId;
   final double amount;
-  final String period;
-  final String month;
   final double spent;
-  final double remaining;
-  final List<int> alertThresholds;
-  final List<int> alertsSent;
   final DateTime createdAt;
-  final DateTime updatedAt;
 
   BudgetModel({
-    required this.budgetId,
-    required this.userId,
+    required this.id,
     required this.categoryId,
     required this.amount,
-    this.period = 'monthly',
-    required this.month,
-    this.spent = 0,
-    double? remaining,
-    this.alertThresholds = const [50, 75, 100],
-    this.alertsSent = const [],
+    this.spent = 0.0,
     required this.createdAt,
-    required this.updatedAt,
-  }) : remaining = remaining ?? (amount - spent);
+  });
 
-  double get percentage => amount > 0 ? (spent / amount * 100).clamp(0, 100) : 0;
-
-  BudgetModel copyWith({
-    double? spent,
-    List<int>? alertsSent,
-  }) {
+  // Factory to map from Firestore
+  factory BudgetModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
     return BudgetModel(
-      budgetId: budgetId,
-      userId: userId,
-      categoryId: categoryId,
-      amount: amount,
-      period: period,
-      month: month,
-      spent: spent ?? this.spent,
-      alertThresholds: alertThresholds,
-      alertsSent: alertsSent ?? this.alertsSent,
-      createdAt: createdAt,
-      updatedAt: DateTime.now(),
+      id: doc.id,
+      categoryId: data['categoryId'] ?? '',
+      amount: (data['amount'] ?? 0.0).toDouble(),
+      spent: (data['spent'] ?? 0.0).toDouble(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
+
+  // Map to Firestore
+  Map<String, dynamic> toFirestore() {
+    return {
+      'categoryId': categoryId,
+      'amount': amount,
+      'spent': spent,
+      'createdAt': FieldValue.serverTimestamp(), // Use server timestamp
+    };
+  }
+
+  BudgetModel copyWith({
+    String? id,
+    String? categoryId,
+    double? amount,
+    double? spent,
+    DateTime? createdAt,
+  }) {
+    return BudgetModel(
+      id: id ?? this.id,
+      categoryId: categoryId ?? this.categoryId,
+      amount: amount ?? this.amount,
+      spent: spent ?? this.spent,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  double get remaining => amount - spent;
+  double get percentage => amount == 0 ? 0 : (spent / amount) * 100;
 }

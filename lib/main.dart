@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:obsidian_magnetar/presentation/screens/splash/splash_screen.dart';
+import 'package:obsidian_magnetar/providers/budget_provider.dart';
 import 'package:obsidian_magnetar/providers/category_provider.dart';
 import 'package:obsidian_magnetar/providers/currency_provider.dart';
 import 'package:obsidian_magnetar/providers/auth_provider.dart';
@@ -52,6 +53,22 @@ void main() async {
             final categoryProvider = provider ?? CategoryProvider();
             categoryProvider.updateUser(user);
             return categoryProvider;
+          },
+        ),
+        ChangeNotifierProxyProvider<firebase_auth.User?, CategoryProvider>(
+          create: (_) => CategoryProvider(),
+          update: (_, user, provider) {
+            final categoryProvider = provider ?? CategoryProvider();
+            categoryProvider.updateUser(user);
+            return categoryProvider;
+          },
+        ),
+        ChangeNotifierProxyProvider<firebase_auth.User?, BudgetProvider>(
+          create: (_) => BudgetProvider(),
+          update: (_, user, provider) {
+            final budgetProvider = provider ?? BudgetProvider();
+            budgetProvider.updateUser(user);
+            return budgetProvider;
           },
         ),
       ],

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../../core/constants/app_colors.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../core/data/model/budget_model.dart';
+import '../../../core/data/model/category_model.dart';
+import '../../../providers/budget_provider.dart';
+import '../../../providers/category_provider.dart';
 
 class AddBudgetScreen extends StatefulWidget {
   const AddBudgetScreen({super.key});
@@ -20,17 +24,30 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
     const Color(0xFFEF4444), // Red
     const Color(0xFF6B7280), // Gray
   ];
+
   Color _selectedColor = const Color(0xFF8B5CF6);
   String _selectedPeriod = 'Monthly';
-  double _alertPercentage = 80.0;
-  String _selectedCategory = 'Groceries'; // Mock
+  CategoryModel? _selectedCategory;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Ensure categories are loaded
+      final categoryProvider = context.read<CategoryProvider>();
+      if (categoryProvider.categories.isEmpty) {
+        // Trigger fetch if possible/needed, usually handled by main proxy provider
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF9FAFB),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.gray900),
@@ -47,19 +64,20 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
         centerTitle: true,
       ),
       body: SafeArea(
-          child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildAmountInput(),
-            const SizedBox(height: 32),
-            _buildFormCard(),
-            const SizedBox(height: 48),
-            _buildSaveButton(),
-          ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildAmountInput(),
+              const SizedBox(height: 32),
+              _buildFormCard(),
+              const SizedBox(height: 48),
+              _buildSaveButton(),
+            ],
+          ),
         ),
-      )),
+      ),
     );
   }
 
@@ -67,16 +85,14 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
     return Column(
       children: [
         Text(
-          "Enter Amount",
+          'Enter Amount',
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.gray500,
           ),
         ),
-        SizedBox(
-          height: 8,
-        ),
+        const SizedBox(height: 8),
         TextField(
           controller: _amountController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -102,20 +118,44 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
     );
   }
 
+  Widget _buildFormCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildCategorySelector(),
+          const Divider(height: 48, color: AppColors.gray100),
+          _buildPeriodSelector(),
+          const Divider(height: 48, color: AppColors.gray100),
+          _buildColorPicker(),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCategorySelector() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Category',
-          style: GoogleFonts.inter(
-              fontSize: 14,
-              color: AppColors.gray500,
-              fontWeight: FontWeight.w500),
+          style: GoogleFonts.inter(fontSize: 14, color: AppColors.gray500, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 12),
         InkWell(
-          onTap: () {},
+          onTap: _showCategoryBottomSheet,
           borderRadius: BorderRadius.circular(12),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -129,25 +169,29 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: _selectedCategory != null
+                        ? Color(_selectedCategory!.colorValue).withOpacity(0.2)
+                        : Colors.white,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    Icons.shopping_bag_outlined,
-                    color: _selectedColor,
-                    size: 20,
+                      _selectedCategory != null
+                          ? IconData(_selectedCategory!.iconCode, fontFamily: 'MaterialIcons')
+                          : Icons.category_outlined,
+                      color: _selectedCategory != null
+                          ? Color(_selectedCategory!.colorValue)
+                          : _selectedColor,
+                      size: 20
                   ),
                 ),
-                SizedBox(
-                  width: 12,
-                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    _selectedCategory,
+                    _selectedCategory?.name ?? 'Select Category',
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.gray900,
+                      color: _selectedCategory != null ? AppColors.gray900 : AppColors.gray400,
                     ),
                   ),
                 ),
@@ -160,16 +204,131 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
     );
   }
 
+  void _showCategoryBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) {
+        return Consumer<CategoryProvider>(
+          builder: (context, provider, child) {
+            if (provider.isLoading) {
+              return const SizedBox(
+                height: 200,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final categories = provider.categories;
+            if (categories.isEmpty) {
+              return SizedBox(
+                height: 200,
+                child: Center(
+                  child: Text(
+                    'No categories found',
+                    style: GoogleFonts.inter(color: AppColors.gray500),
+                  ),
+                ),
+              );
+            }
+
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.6,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Select Category',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.gray900,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Flexible(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      shrinkWrap: true,
+                      itemCount: categories.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final category = categories[index];
+                        final isSelected = _selectedCategory?.id == category.id;
+
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedCategory = category;
+                            });
+                            Navigator.pop(context);
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppColors.gray50 : Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected ? _selectedColor : AppColors.gray200,
+                                width: isSelected ? 1.5 : 1.0,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Color(category.colorValue).withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    IconData(category.iconCode, fontFamily: 'MaterialIcons'),
+                                    color: Color(category.colorValue),
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    category.name,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.gray900,
+                                    ),
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(Icons.check_circle, color: _selectedColor, size: 24),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildPeriodSelector() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Period',
-          style: GoogleFonts.inter(
-              fontSize: 14,
-              color: AppColors.gray500,
-              fontWeight: FontWeight.w500),
+          style: GoogleFonts.inter(fontSize: 14, color: AppColors.gray500, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 12),
         Container(
@@ -189,112 +348,38 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
     );
   }
 
-  Widget _buildFormCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildCategorySelector(),
-          const Divider(height: 48, color: AppColors.gray100),
-          _buildPeriodSelector(),
-          const Divider(height: 48, color: AppColors.gray100),
-          _buildAlertSlider(),
-          const Divider(height: 48, color: AppColors.gray100),
-          _buildColorPicker(),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPeriodTab(String text) {
     final isSelected = _selectedPeriod == text;
     return Expanded(
-        child: GestureDetector(
-      onTap: () => setState(() => _selectedPeriod = text),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? _selectedColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: _selectedColor.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  )
-                ]
-              : [],
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          text,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.gray500,
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedPeriod = text),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? _selectedColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isSelected
+                ? [
+              BoxShadow(
+                color: _selectedColor.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              )
+            ]
+                : [],
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            text,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? Colors.white : AppColors.gray500,
+            ),
           ),
         ),
       ),
-    ));
-  }
-
-  Widget _buildAlertSlider() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Alert me at',
-              style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: AppColors.gray500,
-                  fontWeight: FontWeight.w500),
-            ),
-            Text(
-              '${_alertPercentage.round()}%',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: _selectedColor,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: _selectedColor,
-            inactiveTrackColor: _selectedColor.withValues(alpha: 0.2),
-            thumbColor: Colors.white,
-            thumbShape: const RoundSliderThumbShape(
-                enabledThumbRadius: 12, elevation: 4),
-            overlayColor: _selectedColor.withValues(alpha: 0.1),
-          ),
-          child: Slider(
-            value: _alertPercentage,
-            min: 10,
-            max: 100,
-            divisions: 18,
-            onChanged: (value) => setState(() => _alertPercentage = value),
-          ),
-        ),
-      ],
     );
   }
 
@@ -304,10 +389,7 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
       children: [
         Text(
           'Theme Color',
-          style: GoogleFonts.inter(
-              fontSize: 14,
-              color: AppColors.gray500,
-              fontWeight: FontWeight.w500),
+          style: GoogleFonts.inter(fontSize: 14, color: AppColors.gray500, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 16),
         Row(
@@ -323,17 +405,15 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
                 decoration: BoxDecoration(
                   color: color,
                   shape: BoxShape.circle,
-                  border: isSelected
-                      ? Border.all(color: Colors.white, width: 3)
-                      : null,
+                  border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
                   boxShadow: isSelected
                       ? [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.4),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                        ]
+                    BoxShadow(
+                      color: color.withOpacity(0.4),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
                       : [],
                 ),
                 child: isSelected
@@ -349,16 +429,22 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
 
   Widget _buildSaveButton() {
     return ElevatedButton(
-      onPressed: () => Navigator.of(context).pop(),
+      onPressed: _saveBudget,
       style: ElevatedButton.styleFrom(
         backgroundColor: _selectedColor,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 8,
-        shadowColor: _selectedColor.withValues(alpha: 0.4),
+        shadowColor: _selectedColor.withOpacity(0.4),
       ),
-      child: Text(
+      child: _isLoading
+          ? const SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+      )
+          : Text(
         'Save Budget',
         style: GoogleFonts.inter(
           fontSize: 16,
@@ -367,5 +453,56 @@ class _AddBudgetScreenState extends State<AddBudgetScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _saveBudget() async {
+    if (_amountController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an amount')),
+      );
+      return;
+    }
+
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final amount = double.tryParse(_amountController.text) ?? 0.0;
+
+      final budget = BudgetModel(
+        id: '', // Service will auto-generate ID if empty/null handled, but our service expects doc ID.
+        // Wait, BudgetService.addBudget uses doc(budget.id.isEmpty ? null : budget.id). So empty string is fine for now if logic supports it.
+        // Actually, let's create a new ID here or let Firestore do it.
+        // Firestore 'set' with null doc path creates auto-id? No, collection.doc() generates auto-id.
+        // Service check: _budgetsRef.doc(budget.id.isEmpty ? null : budget.id).set(...)
+        // If budget.id is empty, passing null to doc() generates a new ID. Correct.
+        categoryId: _selectedCategory!.id,
+        amount: amount,
+        spent: 0.0,
+        createdAt: DateTime.now(),
+      );
+
+      await context.read<BudgetProvider>().addBudget(budget);
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving budget: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 }
