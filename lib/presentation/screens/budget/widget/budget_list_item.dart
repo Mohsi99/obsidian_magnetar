@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/data/model/budget_model.dart';
 import '../../../../core/data/model/category_model.dart';
+
+import '../../../../providers/budget_provider.dart';
 import '../../../../providers/category_provider.dart';
 import '../../../../providers/currency_provider.dart';
+import '../edit_budget_screen.dart';
 
 class BudgetListItem extends StatelessWidget {
   final BudgetModel budget;
@@ -20,19 +23,28 @@ class BudgetListItem extends StatelessWidget {
     final currency = context.watch<CurrencyProvider>().currency;
     final percentage = budget.percentage;
 
-    // Find category details
     final categoryProvider = context.watch<CategoryProvider>();
-    final category = categoryProvider.categories.firstWhere(
-          (c) => c.id == budget.categoryId,
-      orElse: () => CategoryModel(
+    CategoryModel category;
+    try {
+      category = categoryProvider.categories.firstWhere(
+            (c) => c.id == budget.categoryId,
+        orElse: () => CategoryModel(
+          id: 'unknown',
+          name: 'Uncategorized',
+          iconCode: Icons.category_outlined.codePoint,
+          colorValue: AppColors.gray500.value,
+        ),
+      );
+    } catch (e) {
+      category = CategoryModel(
         id: 'unknown',
         name: 'Uncategorized',
         iconCode: Icons.category_outlined.codePoint,
         colorValue: AppColors.gray500.value,
-      ),
-    );
+      );
+    }
 
-    // Dynamic color based on usage
+
     Color progressColor;
     if (percentage < 50) {
       progressColor = const Color(0xFF10B981); // Emerald 500
@@ -49,7 +61,7 @@ class BudgetListItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
@@ -64,7 +76,7 @@ class BudgetListItem extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Color(category.colorValue).withOpacity(0.1),
+                    color: Color(category.colorValue).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
@@ -101,16 +113,47 @@ class BudgetListItem extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      '${currency.symbol}${budget.amount.toStringAsFixed(0)}',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.gray900,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${currency.symbol}${budget.amount.toStringAsFixed(0)}',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.gray900,
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert, color: AppColors.gray400),
+                          onSelected: (value) => _handleMenuSelection(context, value),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit, size: 20, color: AppColors.gray600),
+                                  SizedBox(width: 8),
+                                  Text('Edit Budget'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, size: 20, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Delete Budget', style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                     Text(
-                      'Limit',
+                      'Limit    ', // Padding to align visually with amount
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -160,6 +203,47 @@ class BudgetListItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _handleMenuSelection(BuildContext context, String value) {
+    if (value == 'edit') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditBudgetScreen(budget: budget),
+        ),
+      );
+    } else if (value == 'delete') {
+      _showDeleteConfirmation(context);
+    }
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Budget?'),
+        content: const Text('Are you sure you want to delete this budget? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              try {
+                await context.read<BudgetProvider>().deleteBudget(budget.id);
+              } catch (e) {
+                // Handle error
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
