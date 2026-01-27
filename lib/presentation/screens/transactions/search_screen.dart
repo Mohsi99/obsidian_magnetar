@@ -11,7 +11,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _filters = ['All', 'Income', 'Expense', 'Date', 'Amount'];
+  final List<String> _filters = ['All', 'Date', 'Amount'];
   String _selectedFilter = 'All';
 
   @override

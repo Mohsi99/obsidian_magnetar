@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/data/model/budget_model.dart';
+import '../../../../core/data/model/category_model.dart';
 import '../../../../core/data/model/transactions_model.dart';
+import '../../../../providers/budget_provider.dart';
+import '../../../../providers/category_provider.dart';
 import '../../../../providers/currency_provider.dart';
+
 
 class TransactionListItem extends StatelessWidget {
   final TransactionModel transaction;
@@ -17,8 +21,31 @@ class TransactionListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currency = context.watch<CurrencyProvider>().currency;
-    final isIncome = transaction.type == TransactionType.income;
-    final amountColor = isIncome ? const Color(0xFF10B981) : const Color(0xFFEF4444);
+
+    // 1. Find the Budget using budgetId
+    final budgetProvider = context.watch<BudgetProvider>();
+    BudgetModel? budget;
+    try {
+      budget = budgetProvider.budgets.firstWhere((b) => b.id == transaction.budgetId);
+    } catch (_) {}
+
+    // 2. Find the Category using budget.categoryId
+    final categoryProvider = context.watch<CategoryProvider>();
+    CategoryModel? category;
+    if (budget != null) {
+      try {
+        category = categoryProvider.categories.firstWhere((c) => c.id == budget!.categoryId);
+      } catch (_) {}
+    }
+
+    // If budget or category is missing (deleted?), handle gracefully
+    final categoryName = category?.name ?? 'Uncategorized';
+    final categoryIcon = category != null
+        ? IconData(category.iconCode, fontFamily: 'MaterialIcons')
+        : Icons.help_outline;
+    final categoryColor = category != null ? Color(category.colorValue) : AppColors.gray400;
+
+    final amountColor = AppColors.gray900;
 
     return Container(
       decoration: BoxDecoration(
@@ -26,7 +53,7 @@ class TransactionListItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -40,12 +67,12 @@ class TransactionListItem extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isIncome ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+                color: categoryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
-                _getCategoryIcon(transaction.category),
-                color: amountColor,
+                categoryIcon,
+                color: categoryColor,
                 size: 22,
               ),
             ),
@@ -57,14 +84,14 @@ class TransactionListItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    transaction.category,
+                    categoryName,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.gray900,
                       fontSize: 16,
                     ),
                   ),
-                  if (transaction.note != null) ...[
+                  if (transaction.note != null && transaction.note!.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
                       transaction.note!,
@@ -85,36 +112,18 @@ class TransactionListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${isIncome ? '+' : '-'}${currency.symbol}${transaction.amount.toStringAsFixed(2)}',
+                  '-${currency.symbol}${transaction.amount.toStringAsFixed(2)}',
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.w700,
                     color: amountColor,
                     fontSize: 16,
                   ),
                 ),
-
-
               ],
             ),
           ],
         ),
       ),
     );
-  }
-
-  IconData _getCategoryIcon(String category) {
-    // Simple mapping for now
-    switch (category.toLowerCase()) {
-      case 'grocery':
-        return Icons.shopping_basket_outlined;
-      case 'transport':
-        return Icons.directions_car_outlined;
-      case 'salary':
-        return Icons.attach_money;
-      case 'entertainment':
-        return Icons.movie_outlined;
-      default:
-        return Icons.category_outlined;
-    }
   }
 }

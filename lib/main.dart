@@ -7,6 +7,7 @@ import 'package:obsidian_magnetar/providers/category_provider.dart';
 import 'package:obsidian_magnetar/providers/currency_provider.dart';
 import 'package:obsidian_magnetar/providers/auth_provider.dart';
 import 'package:obsidian_magnetar/providers/theme_provider.dart';
+import 'package:obsidian_magnetar/providers/transaction_provider.dart';
 import 'package:obsidian_magnetar/providers/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart'
@@ -69,6 +70,14 @@ void main() async {
             final budgetProvider = provider ?? BudgetProvider();
             budgetProvider.updateUser(user);
             return budgetProvider;
+          },
+        ),
+        ChangeNotifierProxyProvider<firebase_auth.User?, TransactionProvider>(
+          create: (_) => TransactionProvider(),
+          update: (_, user, provider) {
+            final transactionProvider = provider ?? TransactionProvider();
+            transactionProvider.updateUser(user);
+            return transactionProvider;
           },
         ),
       ],

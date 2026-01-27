@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:obsidian_magnetar/presentation/screens/transactions/search_screen.dart';
 import 'package:obsidian_magnetar/presentation/screens/transactions/widget/transaction_list_item.dart';
+import 'package:provider/provider.dart';
+
+import '../../../core/data/model/transactions_model.dart';
+import '../../../providers/transaction_provider.dart';
+import 'search_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/data/model/transactions_model.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -16,214 +19,64 @@ class TransactionsScreen extends StatefulWidget {
 }
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
-  final List<TransactionModel> _mockTransactions = [];
-
-  String _selectedFilter = 'All';
-
   @override
   void initState() {
     super.initState();
-    _generateMockData();
-  }
-
-  void _generateMockData() {
-    final now = DateTime.now();
-    _mockTransactions.addAll([
-      TransactionModel(
-        transactionId: '1',
-        userId: 'user1',
-        type: TransactionType.expense,
-        amount: 85.50,
-        category: 'Grocery',
-        categoryId: 'cat1',
-        date: now.subtract(const Duration(hours: 2)),
-        note: 'Weekly groceries',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      TransactionModel(
-        transactionId: '2',
-        userId: 'user1',
-        type: TransactionType.expense,
-        amount: 24.00,
-        category: 'Transport',
-        categoryId: 'cat2',
-        date: now.subtract(const Duration(days: 1)),
-        note: 'Uber ride',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      TransactionModel(
-        transactionId: '3',
-        userId: 'user1',
-        type: TransactionType.income,
-        amount: 3500.00,
-        category: 'Salary',
-        categoryId: 'cat3',
-        date: now.subtract(const Duration(days: 2)),
-        note: 'Monthly Salary',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      TransactionModel(
-        transactionId: '4',
-        userId: 'user1',
-        type: TransactionType.expense,
-        amount: 15.00,
-        category: 'Entertainment',
-        categoryId: 'cat4',
-        date: now.subtract(const Duration(days: 3)),
-        note: 'Netflix Subscription',
-        isRecurring: true,
-        createdAt: now,
-        updatedAt: now,
-      ),
-    ]);
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : AppColors.gray900;
+
     return Scaffold(
-      backgroundColor: AppColors.gray50,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text(
+        title: Text(
           AppStrings.transactions,
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(fontWeight: FontWeight.w600, color: textColor),
         ),
-        backgroundColor: AppColors.gray50,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: AppColors.gray900),
+            icon: Icon(Icons.search, color: textColor),
             onPressed: () {
               Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SearchScreen(),
-                  ));
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: AppColors.gray900),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.white,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (context) => Container(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Filter Transactions',
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.gray900,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Mock Filters
-                      _buildFilterOption(context, 'Date Range'),
-                      _buildFilterOption(context, 'Category'),
-                      _buildFilterOption(context, 'Amount'),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary500,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          'Apply Filters',
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                context,
+                MaterialPageRoute(builder: (context) => const SearchScreen()),
               );
             },
           ),
+          /*IconButton(
+            icon: Icon(Icons.filter_list, color: textColor),
+            onPressed: () {
+               // Filter implementation to be updated later if needed
+            },
+          ),*/
         ],
       ),
-      body: Column(
-        children: [
-          _buildFilterTabs(),
-          Expanded(
-            child: _mockTransactions.isEmpty
-                ? _buildEmptyState()
-                : _buildTransactionList(),
-          ),
-        ],
-      ),
-    );
-  }
+      body: Consumer<TransactionProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-  Widget _buildFilterTabs() {
-    final filters = ['All', 'Income', 'Expense'];
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
-        scrollDirection: Axis.horizontal,
-        itemCount: filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final filter = filters[index];
-          final isSelected = _selectedFilter == filter;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedFilter = filter),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary500 : Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: isSelected ? AppColors.primary500 : Colors.transparent,
-                ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: AppColors.primary500.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        )
-                      ]
-                    : [],
-              ),
-              child: Center(
-                child: Text(
-                  filter,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : AppColors.gray600,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-          );
+          if (provider.transactions.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          return _buildTransactionList(provider.transactions);
         },
       ),
     );
   }
 
-  Widget _buildTransactionList() {
+  // Removed _buildFilterTabs
+
+  Widget _buildTransactionList(List<TransactionModel> transactions) {
     return ListView.builder(
       padding: const EdgeInsets.only(
         left: AppDimensions.lg,
@@ -231,14 +84,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         top: AppDimensions.md,
         bottom: 100,
       ),
-      itemCount: _mockTransactions.length,
+      itemCount: transactions.length,
       itemBuilder: (context, index) {
-        final transaction = _mockTransactions[index];
+        final transaction = transactions[index];
 
         // Simple date header logic (improvement: group properly)
         final bool showHeader = index == 0 ||
             !DateUtils.isSameDay(
-                _mockTransactions[index - 1].date, transaction.date);
+                transactions[index - 1].date, transaction.date);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,6 +104,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   _formatDate(transaction.date).toUpperCase(),
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                         color: AppColors.gray500,
+                        // Kept gray500 as it's typically fine for labels in both modes
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.1,
                       ),
@@ -286,29 +140,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     if (DateUtils.isSameDay(date, now)) return 'Today';
-    if (DateUtils.isSameDay(date, now.subtract(const Duration(days: 1)))) {
+    if (DateUtils.isSameDay(date, now.subtract(const Duration(days: 1))))
       return 'Yesterday';
-    }
     return '${date.day}/${date.month}/${date.year}';
-  }
-
-  Widget _buildFilterOption(BuildContext context, String title) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              color: AppColors.gray600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const Icon(Icons.chevron_right, color: AppColors.gray400),
-        ],
-      ),
-    );
   }
 }

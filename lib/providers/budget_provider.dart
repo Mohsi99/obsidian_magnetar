@@ -75,6 +75,19 @@ class BudgetProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateSpent(String budgetId, double amount) async {
+    if (_budgetService == null) return;
+    try {
+      await _budgetService!.updateBudgetSpent(budgetId, amount);
+      // Optimistically update local state or re-fetch?
+      // Since we are using streams, the stream listener should update the state.
+      // But we can also update locally for immediate UI feedback if needed.
+    } catch (e) {
+      debugPrint('Error updating budget spent: $e');
+      rethrow;
+    }
+  }
+
   Future<void> deleteBudget(String budgetId) async {
     if (_budgetService == null) return;
     try {

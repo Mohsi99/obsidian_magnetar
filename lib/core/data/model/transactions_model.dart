@@ -1,46 +1,65 @@
-
-enum TransactionType { income, expense }
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TransactionModel {
-  final String transactionId;
+  final String id;
   final String userId;
-  final TransactionType type;
+  final String budgetId;
   final double amount;
-  final String category;
-  final String categoryId;
   final DateTime date;
   final String? note;
-  final bool isRecurring;
-  final RecurringPattern? recurringPattern;
   final DateTime createdAt;
-  final DateTime updatedAt;
 
   TransactionModel({
-    required this.transactionId,
+    required this.id,
     required this.userId,
-    required this.type,
+    required this.budgetId,
     required this.amount,
-    required this.category,
-    required this.categoryId,
     required this.date,
     this.note,
-    this.isRecurring = false,
-    this.recurringPattern,
     required this.createdAt,
-    required this.updatedAt,
   });
 
-// Removed Firestore specific methods for UI-only implementation
-}
+  factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return TransactionModel(
+      id: doc.id,
+      userId: data['userId'] ?? '',
+      budgetId: data['budgetId'] ?? '',
+      amount: (data['amount'] ?? 0.0).toDouble(),
+      date: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      note: data['note'],
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
 
-class RecurringPattern {
-  final String frequency; // daily, weekly, monthly
-  final int interval;
-  final DateTime? endDate;
+  Map<String, dynamic> toFirestore() {
+    return {
+      'userId': userId,
+      'budgetId': budgetId,
+      'amount': amount,
+      'date': Timestamp.fromDate(date),
+      'note': note,
+      'createdAt': FieldValue.serverTimestamp(),
+    };
+  }
 
-  RecurringPattern({
-    required this.frequency,
-    required this.interval,
-    this.endDate,
-  });
+  TransactionModel copyWith({
+    String? id,
+    String? userId,
+    String? budgetId,
+    double? amount,
+    DateTime? date,
+    String? note,
+    DateTime? createdAt,
+  }) {
+    return TransactionModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      budgetId: budgetId ?? this.budgetId,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      note: note ?? this.note,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
