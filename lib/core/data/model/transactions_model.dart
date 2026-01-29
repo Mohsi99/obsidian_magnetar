@@ -8,6 +8,7 @@ class TransactionModel {
   final DateTime date;
   final String? note;
   final DateTime createdAt;
+  final DateTime? updatedAt;
 
   TransactionModel({
     required this.id,
@@ -17,6 +18,7 @@ class TransactionModel {
     required this.date,
     this.note,
     required this.createdAt,
+    this.updatedAt,
   });
 
   factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
@@ -29,6 +31,7 @@ class TransactionModel {
       date: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
       note: data['note'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -39,7 +42,8 @@ class TransactionModel {
       'amount': amount,
       'date': Timestamp.fromDate(date),
       'note': note,
-      'createdAt': FieldValue.serverTimestamp(),
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : FieldValue.serverTimestamp(),
     };
   }
 
@@ -51,6 +55,7 @@ class TransactionModel {
     DateTime? date,
     String? note,
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -60,6 +65,7 @@ class TransactionModel {
       date: date ?? this.date,
       note: note ?? this.note,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
